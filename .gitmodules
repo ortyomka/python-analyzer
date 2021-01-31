@@ -1,0 +1,300 @@
+[submodule "projects/system-design-primer"]
+	path = projects/system-design-primer
+	url = https://github.com/donnemartin/system-design-primer
+[submodule "projects/Python"]
+	path = projects/Python
+	url = https://github.com/TheAlgorithms/Python
+[submodule "projects/awesome-python"]
+	path = projects/awesome-python
+	url = https://github.com/vinta/awesome-python
+[submodule "projects/thefuck"]
+	path = projects/thefuck
+	url = https://github.com/nvbn/thefuck
+[submodule "projects/django"]
+	path = projects/django
+	url = https://github.com/django/django
+[submodule "projects/flask"]
+	path = projects/flask
+	url = https://github.com/pallets/flask
+[submodule "projects/keras"]
+	path = projects/keras
+	url = https://github.com/keras-team/keras
+[submodule "projects/httpie"]
+	path = projects/httpie
+	url = https://github.com/httpie/httpie
+[submodule "projects/requests"]
+	path = projects/requests
+	url = https://github.com/psf/requests
+[submodule "projects/scikit-learn"]
+	path = projects/scikit-learn
+	url = https://github.com/scikit-learn/scikit-learn
+[submodule "projects/scrapy"]
+	path = projects/scrapy
+	url = https://github.com/scrapy/scrapy
+[submodule "projects/core"]
+	path = projects/core
+	url = https://github.com/home-assistant/core
+[submodule "projects/ansible"]
+	path = projects/ansible
+	url = https://github.com/ansible/ansible
+[submodule "projects/face_recognition"]
+	path = projects/face_recognition
+	url = https://github.com/ageitgey/face_recognition
+[submodule "projects/HelloGitHub"]
+	path = projects/HelloGitHub
+	url = https://github.com/521xueweihan/HelloGitHub
+[submodule "projects/superset"]
+	path = projects/superset
+	url = https://github.com/apache/superset
+[submodule "projects/manim"]
+	path = projects/manim
+	url = https://github.com/3b1b/manim
+[submodule "projects/AiLearning"]
+	path = projects/AiLearning
+	url = https://github.com/apachecn/AiLearning
+[submodule "projects/pandas"]
+	path = projects/pandas
+	url = https://github.com/pandas-dev/pandas
+[submodule "projects/certbot"]
+	path = projects/certbot
+	url = https://github.com/certbot/certbot
+[submodule "projects/sentry"]
+	path = projects/sentry
+	url = https://github.com/getsentry/sentry
+[submodule "projects/python-patterns"]
+	path = projects/python-patterns
+	url = https://github.com/faif/python-patterns
+[submodule "projects/fastapi"]
+	path = projects/fastapi
+	url = https://github.com/tiangolo/fastapi
+[submodule "projects/wtfpython"]
+	path = projects/wtfpython
+	url = https://github.com/satwikkansal/wtfpython
+[submodule "projects/Real-Time-Voice-Cloning"]
+	path = projects/Real-Time-Voice-Cloning
+	url = https://github.com/CorentinJ/Real-Time-Voice-Cloning
+[submodule "projects/interactive-coding-challenges"]
+	path = projects/interactive-coding-challenges
+	url = https://github.com/donnemartin/interactive-coding-challenges
+[submodule "projects/compose"]
+	path = projects/compose
+	url = https://github.com/docker/compose
+[submodule "projects/pipenv"]
+	path = projects/pipenv
+	url = https://github.com/pypa/pipenv
+[submodule "projects/mitmproxy"]
+	path = projects/mitmproxy
+	url = https://github.com/mitmproxy/mitmproxy
+[submodule "projects/rich"]
+	path = projects/rich
+	url = https://github.com/willmcgugan/rich
+[submodule "projects/data-science-ipython-notebooks"]
+	path = projects/data-science-ipython-notebooks
+	url = https://github.com/donnemartin/data-science-ipython-notebooks
+[submodule "projects/airflow"]
+	path = projects/airflow
+	url = https://github.com/apache/airflow
+[submodule "projects/tornado"]
+	path = projects/tornado
+	url = https://github.com/tornadoweb/tornado
+[submodule "projects/django-rest-framework"]
+	path = projects/django-rest-framework
+	url = https://github.com/encode/django-rest-framework
+[submodule "projects/d2l-zh"]
+	path = projects/d2l-zh
+	url = https://github.com/d2l-ai/d2l-zh
+[submodule "projects/sqlmap"]
+	path = projects/sqlmap
+	url = https://github.com/sqlmapproject/sqlmap
+[submodule "projects/black"]
+	path = projects/black
+	url = https://github.com/psf/black
+[submodule "projects/algorithms"]
+	path = projects/algorithms
+	url = https://github.com/keon/algorithms
+[submodule "projects/python-fire"]
+	path = projects/python-fire
+	url = https://github.com/google/python-fire
+[submodule "projects/python-cheatsheet"]
+	path = projects/python-cheatsheet
+	url = https://github.com/gto76/python-cheatsheet
+[submodule "projects/spaCy"]
+	path = projects/spaCy
+	url = https://github.com/explosion/spaCy
+[submodule "projects/redash"]
+	path = projects/redash
+	url = https://github.com/getredash/redash
+[submodule "projects/glances"]
+	path = projects/glances
+	url = https://github.com/nicolargo/glances
+[submodule "projects/tqdm"]
+	path = projects/tqdm
+	url = https://github.com/tqdm/tqdm
+[submodule "projects/hosts"]
+	path = projects/hosts
+	url = https://github.com/StevenBlack/hosts
+[submodule "projects/celery"]
+	path = projects/celery
+	url = https://github.com/celery/celery
+[submodule "projects/numpy"]
+	path = projects/numpy
+	url = https://github.com/numpy/numpy
+[submodule "projects/reddit"]
+	path = projects/reddit
+	url = https://github.com/reddit-archive/reddit
+[submodule "projects/TensorFlow-Course"]
+	path = projects/TensorFlow-Course
+	url = https://github.com/instillai/TensorFlow-Course
+[submodule "projects/spleeter"]
+	path = projects/spleeter
+	url = https://github.com/deezer/spleeter
+[submodule "projects/jumpserver"]
+	path = projects/jumpserver
+	url = https://github.com/jumpserver/jumpserver
+[submodule "projects/locust"]
+	path = projects/locust
+	url = https://github.com/locustio/locust
+[submodule "projects/pyspider"]
+	path = projects/pyspider
+	url = https://github.com/binux/pyspider
+[submodule "projects/ipython"]
+	path = projects/ipython
+	url = https://github.com/ipython/ipython
+[submodule "projects/bokeh"]
+	path = projects/bokeh
+	url = https://github.com/bokeh/bokeh
+[submodule "projects/sanic"]
+	path = projects/sanic
+	url = https://github.com/sanic-org/sanic
+[submodule "projects/ray"]
+	path = projects/ray
+	url = https://github.com/ray-project/ray
+[submodule "projects/PySnooper"]
+	path = projects/PySnooper
+	url = https://github.com/cool-RR/PySnooper
+[submodule "projects/luigi"]
+	path = projects/luigi
+	url = https://github.com/spotify/luigi
+[submodule "projects/wechat_jump_game"]
+	path = projects/wechat_jump_game
+	url = https://github.com/wangshub/wechat_jump_game
+[submodule "projects/Paddle"]
+	path = projects/Paddle
+	url = https://github.com/PaddlePaddle/Paddle
+[submodule "projects/dash"]
+	path = projects/dash
+	url = https://github.com/plotly/dash
+[submodule "projects/cookiecutter"]
+	path = projects/cookiecutter
+	url = https://github.com/cookiecutter/cookiecutter
+[submodule "projects/poetry"]
+	path = projects/poetry
+	url = https://github.com/python-poetry/poetry
+[submodule "projects/python-telegram-bot"]
+	path = projects/python-telegram-bot
+	url = https://github.com/python-telegram-bot/python-telegram-bot
+[submodule "projects/zipline"]
+	path = projects/zipline
+	url = https://github.com/quantopian/zipline
+[submodule "projects/zulip"]
+	path = projects/zulip
+	url = https://github.com/zulip/zulip
+[submodule "projects/awesome-python-login-model"]
+	path = projects/awesome-python-login-model
+	url = https://github.com/Kr1s77/awesome-python-login-model
+[submodule "projects/kivy"]
+	path = projects/kivy
+	url = https://github.com/kivy/kivy
+[submodule "projects/streamlit"]
+	path = projects/streamlit
+	url = https://github.com/streamlit/streamlit
+[submodule "projects/powerline"]
+	path = projects/powerline
+	url = https://github.com/powerline/powerline
+[submodule "projects/python-spider"]
+	path = projects/python-spider
+	url = https://github.com/Jack-Cherish/python-spider
+[submodule "projects/InstaPy"]
+	path = projects/InstaPy
+	url = https://github.com/timgrossmann/InstaPy
+[submodule "projects/autojump"]
+	path = projects/autojump
+	url = https://github.com/wting/autojump
+[submodule "projects/prophet"]
+	path = projects/prophet
+	url = https://github.com/facebook/prophet
+[submodule "projects/faker"]
+	path = projects/faker
+	url = https://github.com/joke2k/faker
+[submodule "projects/gensim"]
+	path = projects/gensim
+	url = https://github.com/RaRe-Technologies/gensim
+[submodule "projects/salt"]
+	path = projects/salt
+	url = https://github.com/saltstack/salt
+[submodule "projects/requests-html"]
+	path = projects/requests-html
+	url = https://github.com/psf/requests-html
+[submodule "projects/Zappa"]
+	path = projects/Zappa
+	url = https://github.com/Miserlou/Zappa
+[submodule "projects/yapf"]
+	path = projects/yapf
+	url = https://github.com/google/yapf
+[submodule "projects/mkdocs"]
+	path = projects/mkdocs
+	url = https://github.com/mkdocs/mkdocs
+[submodule "projects/pytorch-lightning"]
+	path = projects/pytorch-lightning
+	url = https://github.com/PyTorchLightning/pytorch-lightning
+[submodule "projects/fairseq"]
+	path = projects/fairseq
+	url = https://github.com/pytorch/fairseq
+[submodule "projects/ChatterBot"]
+	path = projects/ChatterBot
+	url = https://github.com/gunthercox/ChatterBot
+[submodule "projects/aiohttp"]
+	path = projects/aiohttp
+	url = https://github.com/aio-libs/aiohttp
+[submodule "projects/walle-web"]
+	path = projects/walle-web
+	url = https://github.com/meolu/walle-web
+[submodule "projects/newspaper"]
+	path = projects/newspaper
+	url = https://github.com/codelucas/newspaper
+[submodule "projects/kitty"]
+	path = projects/kitty
+	url = https://github.com/kovidgoyal/kitty
+[submodule "projects/speedtest-cli"]
+	path = projects/speedtest-cli
+	url = https://github.com/sivel/speedtest-cli
+[submodule "projects/tushare"]
+	path = projects/tushare
+	url = https://github.com/waditu/tushare
+[submodule "projects/pyecharts"]
+	path = projects/pyecharts
+	url = https://github.com/pyecharts/pyecharts
+[submodule "projects/click"]
+	path = projects/click
+	url = https://github.com/pallets/click
+[submodule "projects/pelican"]
+	path = projects/pelican
+	url = https://github.com/getpelican/pelican
+[submodule "projects/openage"]
+	path = projects/openage
+	url = https://github.com/SFTtech/openage
+[submodule "projects/saleor"]
+	path = projects/saleor
+	url = https://github.com/mirumee/saleor
+[submodule "projects/wagtail"]
+	path = projects/wagtail
+	url = https://github.com/wagtail/wagtail
+[submodule "projects/beets"]
+	path = projects/beets
+	url = https://github.com/beetbox/beets
+[submodule "projects/EasyOCR"]
+	path = projects/EasyOCR
+	url = https://github.com/JaidedAI/EasyOCR
+[submodule "projects/stanford-tensorflow-tutorials"]
+	path = projects/stanford-tensorflow-tutorials
+	url = https://github.com/chiphuyen/stanford-tensorflow-tutorials
