@@ -6,63 +6,6 @@ import astunparse
 from enum import Enum
 
 
-class Type(Enum):
-    Negative = 1
-    Semi = 2
-    Positive = 3
-
-
-negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
-
-
-def check_negative(node: ast.Expr) -> Type:
-    if type(node) == ast.UnaryOp:
-        if type(node.op) == ast.Not:
-            return Type.Negative
-        return check_negative(node.operand)
-    if type(node) == ast.Compare:
-        global negative_op
-        for op in node.ops:
-            if type(op) in negative_op:
-                return Type.Negative
-        return Type.Positive
-    if type(node) == ast.BoolOp:
-        result = []
-        for v in node.values:
-            result.append(check_negative(v))
-        if Type.Semi in result:
-            return Type.Semi
-
-        if Type.Negative not in result:
-            return Type.Positive
-
-        if Type.Positive in result:
-            return Type.Semi
-
-        return Type.Negative
-    return Type.Positive
-
-
-def check_complex(node: ast.Expr) -> int:
-    if type(node) == ast.UnaryOp:
-        return 1 + check_complex(node.operand)
-    if type(node) == ast.BinOp:
-        return 1 + check_complex(node.left) + check_complex(node.right)
-    if type(node) == ast.BoolOp:
-        result = 1
-        for expr in node.values:
-            result += check_complex(expr)
-        return result
-    if type(node) == ast.Compare:
-        result = len(node.ops) + check_complex(node.left)
-        for expr in node.comparators:
-            result += check_complex(expr)
-        return result
-    if type(node) == ast.IfExp:
-        return 1 + check_complex(node.test)
-    return 0
-
-
 class IfVertical(ast.NodeVisitor):
     def __init__(self):
         self.negative = 0
@@ -73,16 +16,69 @@ class IfVertical(ast.NodeVisitor):
         self.vertical = dict()
         self.elses = 0
 
+    class Type(Enum):
+        Negative = 1
+        Semi = 2
+        Positive = 3
+
+    negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
+
+    def check_negative_in(self, node: ast.Expr) -> Type:
+        if type(node) == ast.UnaryOp:
+            if type(node.op) == ast.Not:
+                return self.Type.Negative
+            return self.check_negative_in(node.operand)
+        if type(node) == ast.Compare:
+            global negative_op
+            for op in node.ops:
+                if type(op) in negative_op:
+                    return self.Type.Negative
+            return self.Type.Positive
+        if type(node) == ast.BoolOp:
+            result = []
+            for v in node.values:
+                result.append(self.check_negative_in(v))
+            if self.Type.Semi in result:
+                return self.Type.Semi
+
+            if self.Type.Negative not in result:
+                return self.Type.Positive
+
+            if self.Type.Positive in result:
+                return self.Type.Semi
+
+            return self.Type.Negative
+        return self.Type.Positive
+
+    def check_complex_in(self, node: ast.Expr) -> int:
+        if type(node) == ast.UnaryOp:
+            return 1 + self.check_complex_in(node.operand)
+        if type(node) == ast.BinOp:
+            return 1 + self.check_complex_in(node.left) + self.check_complex_in(node.right)
+        if type(node) == ast.BoolOp:
+            result = 1
+            for expr in node.values:
+                result += self.check_complex_in(expr)
+            return result
+        if type(node) == ast.Compare:
+            result = len(node.ops) + self.check_complex_in(node.left)
+            for expr in node.comparators:
+                result += self.check_complex_in(expr)
+            return result
+        if type(node) == ast.IfExp:
+            return 1 + self.check_complex_in(node.test)
+        return 0
+
     def check_negative(self, node: ast.Expr):
         self.all += 1
-        r = check_negative(node)
-        if r == Type.Negative:
+        r = self.check_negative_in(node)
+        if r == self.Type.Negative:
             self.negative += 1
-        elif r == Type.Semi:
+        elif r == self.Type.Semi:
             self.negative += 1
 
     def check_complex(self, node: ast.Expr):
-        com = check_complex(node)
+        com = self.check_complex_in(node)
         if com in self.complex:
             self.complex[com] += 1
         else:
@@ -257,7 +253,6 @@ class Func(ast.NodeVisitor):
             self.check_function_def(node)
 
         return ast.NodeVisitor.generic_visit(self, node)
-
 
 if __name__ == "__main__":
     files = astor.code_to_ast.find_py_files("./projects/aiohttp")
