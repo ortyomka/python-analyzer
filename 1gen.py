@@ -1,15 +1,19 @@
+from typing import Any
+
 import astor
 import ast
+
+accept_list = ["For", "AsyncFor",
+               "While", "If", "IfExp",
+               "With", "AsyncWith", "Try",
+               "ListComp", "SetComp", "DictComp", "GeneratorExp"]
+# This nodes be interpreted as names
+names_list = ["FunctionDef", "AsyncFunctionDef", "ClassDef"]
 
 if __name__ == "__main__":
     files = astor.code_to_ast.find_py_files("./projects")
 
     results = dict()
-    accept_list = ["For", "AsyncFor", "While", "If",
-                   "With", "AsyncWith", "Raise", "Try", "Pass", "Break", "Continue",
-                   "Lambda", "IfExp", "Dict", "Set", "ListComp", "SetComp", "DictComp",
-                   "List", "Tuple", "Slice", "GeneratorExp"]
-
     error_files = 0
     all_files = 0
     for i in files:
@@ -23,7 +27,7 @@ if __name__ == "__main__":
 
         for g in ast.walk(a):
             key = type(g).__name__
-            if key not in accept_list:
+            if not (key in accept_list or key in names_list):
                 continue
 
             if key in results:
@@ -32,7 +36,6 @@ if __name__ == "__main__":
                 results[key] = 1
 
     results = {k: v for k, v in sorted(results.items(), key=lambda item: item[1], reverse=True)}
-
     for k in results:
         print(k, ": ", results[k])
 
