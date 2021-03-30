@@ -1,9 +1,25 @@
-from typing import Any
+from typing import Any, Tuple
 import astor
 import ast
 import re
 import astunparse
 from enum import Enum
+
+negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
+
+
+class Order(Enum):
+    Single = 1
+    Semi = 2
+    Decr = 3
+    Incr = 4
+    Equal = 5
+
+
+class Type(Enum):
+    Negative = 1
+    Semi = 2
+    Positive = 3
 
 
 class IfVertical(ast.NodeVisitor):
@@ -16,39 +32,38 @@ class IfVertical(ast.NodeVisitor):
         self.vertical = dict()
         self.elses = 0
 
-    class Type(Enum):
-        Negative = 1
-        Semi = 2
-        Positive = 3
-
-    negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
+        self.single = 0
+        self.decr = 0
+        self.semi = 0
+        self.incr = 0
+        self.equal = 0
 
     def check_negative_in(self, node: ast.Expr) -> Type:
         if type(node) == ast.UnaryOp:
             if type(node.op) == ast.Not:
-                return self.Type.Negative
+                return Type.Negative
             return self.check_negative_in(node.operand)
         if type(node) == ast.Compare:
             global negative_op
             for op in node.ops:
                 if type(op) in negative_op:
-                    return self.Type.Negative
-            return self.Type.Positive
+                    return Type.Negative
+            return Type.Positive
         if type(node) == ast.BoolOp:
             result = []
             for v in node.values:
                 result.append(self.check_negative_in(v))
-            if self.Type.Semi in result:
-                return self.Type.Semi
+            if Type.Semi in result:
+                return Type.Semi
 
-            if self.Type.Negative not in result:
-                return self.Type.Positive
+            if Type.Negative not in result:
+                return Type.Positive
 
-            if self.Type.Positive in result:
-                return self.Type.Semi
+            if Type.Positive in result:
+                return Type.Semi
 
-            return self.Type.Negative
-        return self.Type.Positive
+            return Type.Negative
+        return Type.Positive
 
     def check_complex_in(self, node: ast.Expr) -> int:
         if type(node) == ast.UnaryOp:
@@ -72,9 +87,9 @@ class IfVertical(ast.NodeVisitor):
     def check_negative(self, node: ast.Expr):
         self.all += 1
         r = self.check_negative_in(node)
-        if r == self.Type.Negative:
+        if r == Type.Negative:
             self.negative += 1
-        elif r == self.Type.Semi:
+        elif r == Type.Semi:
             self.negative += 1
 
     def check_complex(self, node: ast.Expr):
@@ -90,6 +105,18 @@ class IfVertical(ast.NodeVisitor):
             self.vertical[r] += 1
         else:
             self.vertical[r] = 1
+
+        t, size = self.check_body_else(node)
+        if t == Order.Single:
+            self.single += 1
+        elif t == Order.Decr:
+            self.decr += 1
+        elif t == Order.Incr:
+            self.incr += 1
+        elif t == Order.Semi:
+            self.semi += 1
+        elif t == Order.Equal:
+            self.equal += 1
 
     def getIfVertical(self, node: ast.If) -> int:
         self.check_negative(node.test)
@@ -113,17 +140,76 @@ class IfVertical(ast.NodeVisitor):
 
         return result
 
+    def check_body_else(self, node: ast.If) -> Tuple[Order, int]:
+        first = node.body[0]
+        last = node.body[-1]
+        try:
+            while True:
+                try:
+                    temp = last.orelse[-1]
+                except Exception:
+                    temp = last.body[-1]
+                if temp:
+                    last = temp
+                    continue
+                break
+        except Exception:
+            var = 1  # nothing here
+        body_size = last.lineno - first.lineno + 1
+
+        if len(node.orelse) == 0:
+            return Order.Single, body_size
+
+        if len(node.orelse) == 1 and type(node.orelse[0]) == ast.If:
+            order, size = self.check_body_else(node.orelse[0])
+            if order == Order.Semi:
+                return Order.Semi, body_size
+
+            if order == Order.Equal or order == Order.Single:
+                if size < body_size:
+                    return Order.Decr, body_size
+                elif size > body_size:
+                    return Order.Incr, body_size
+                else:
+                    return Order.Equal, body_size
+
+            if order == Order.Decr:
+                if size <= body_size:
+                    return Order.Decr, body_size
+                else:
+                    return Order.Semi, body_size
+            if order == Order.Incr:
+                if size >= body_size:
+                    return Order.Incr, body_size
+                else:
+                    return Order.Semi, body_size
+
+        first = node.orelse[0]
+        last = node.orelse[-1]
+        try:
+            while True:
+                try:
+                    temp = last.orelse[-1]
+                except Exception:
+                    temp = last.body[-1]
+                if temp:
+                    last = temp
+                    continue
+                break
+        except Exception:
+            var = 1  # nothing here
+        else_size = last.lineno - first.lineno + 1
+
+        if else_size < body_size:
+            return Order.Decr, body_size
+        elif else_size > body_size:
+            return Order.Incr, body_size
+        else:
+            return Order.Equal, body_size
+
     def visit_If(self, node: ast.If) -> Any:
         self.check_vertical(node)
         return node
-
-
-class IfWidth(ast.NodeVisitor):
-    def __init__(self):
-        self.width = dict()
-        self.ifs = 0
-        self.shadow = 0
-        self.elses = 0
 
 
 class Func(ast.NodeVisitor):
@@ -147,6 +233,8 @@ class Func(ast.NodeVisitor):
         self.pep8_args["no"] = 0
 
         self.len_args = dict()
+
+        self.body_size = dict()
 
     def check_length_of_names(self, name):
         if re.match(r'^[a-z0-9_]+$', name):
@@ -240,6 +328,28 @@ class Func(ast.NodeVisitor):
             else:
                 self.pep8_args["no"] += 1
 
+    def check_body(self, node: ast.FunctionDef):
+        if len(node.body) != 0:
+            first = node.body[0]
+            last = node.body[-1]
+            try:
+                while True:
+                    try:
+                        temp = last.orelse[-1]
+                    except Exception:
+                        temp = last.body[-1]
+                    if temp:
+                        last = temp
+                        continue
+                    break
+            except Exception:
+                var = 1  # nothing here
+            size = last.lineno - first.lineno + 1
+            if size not in self.body_size:
+                self.body_size[size] = 0
+
+            self.body_size[size] += 1
+
     def check_function_def(self, node: ast.FunctionDef):
         self.count += 1
         self.count_args(node.args)
@@ -247,6 +357,7 @@ class Func(ast.NodeVisitor):
         self.check_args_len(node.args)
         self.check_name_pep8(node.name)
         self.check_length_of_names(node.name)
+        self.check_body(node)
 
     def generic_visit(self, node: ast.AST) -> Any:
         if type(node) == ast.FunctionDef:
@@ -254,12 +365,128 @@ class Func(ast.NodeVisitor):
 
         return ast.NodeVisitor.generic_visit(self, node)
 
+
+class ForHelper(ast.NodeVisitor):
+    def __init__(self):
+        self.continue_ = 0
+        self.break_ = 0
+        self.return_ = 0
+
+        self.whiles = list()
+
+        self.fors = list()
+
+    def visit_Continue(self, node: ast.Continue) -> Any:
+        self.continue_ += 1
+        return node
+
+    def visit_Break(self, node: ast.Break) -> Any:
+        self.break_ += 1
+        return node
+
+    def visit_Return(self, node: ast.Return) -> Any:
+        self.return_ += 1
+        return node
+
+    def visit_While(self, node: ast.While) -> Any:
+        self.whiles.append(node)
+        return node
+
+    def visit_For(self, node: ast.For) -> Any:
+        self.fors.append(node)
+        return node
+
+
+class For(ast.NodeVisitor):
+    def __init__(self):
+        self.all = 0
+        self.with_else = 0
+
+        self.num_while = 0
+        self.num_continue = 0
+        self.num_break = 0
+        self.num_return = 0
+
+        self.temp = dict()
+
+        self.body_size = dict()
+
+    def check_else(self, node: ast.For):
+        if len(node.orelse) != 0:
+            self.with_else += 1
+
+    def visit_For(self, node: ast.For) -> Any:
+        self.all += 1
+
+        self.check_else(node)
+
+        self.visit(node.target)
+
+        key = type(node.iter).__name__
+        if key not in self.temp:
+            self.temp[key] = 0
+
+        self.temp[key] += 1
+
+        self.visit(node.iter)
+
+        if len(node.body) != 0:
+            first = node.body[0]
+            last = node.body[-1]
+            try:
+                while True:
+                    try:
+                        temp = last.orelse[-1]
+                    except Exception:
+                        temp = last.body[-1]
+                    if temp:
+                        last = temp
+                        continue
+                    break
+            except Exception:
+                var = 1  # nothing here
+            size = last.lineno - first.lineno + 1
+            if size not in self.body_size:
+                self.body_size[size] = 0
+
+            self.body_size[size] += 1
+
+        helper = ForHelper()
+        for stmt in node.body:
+            helper.visit(stmt)
+
+        while len(helper.whiles) != 0:
+            helper2 = ForHelper()
+            whiles = list(helper.whiles)
+            for nwhile in whiles:
+                for n in nwhile.body:
+                    helper2.visit(n)
+                for n in nwhile.orelse:
+                    helper2.visit(n)
+                whiles += helper2.whiles
+                helper2.whiles = []
+            self.num_while += len(whiles)
+            helper.whiles = []
+            for nfor in helper2.fors:
+                helper.visit(nfor)
+
+        self.num_continue += helper.continue_
+        self.num_break += helper.break_
+        self.num_return += helper.return_
+
+        for fn in helper.fors:
+            self.visit(fn)
+
+        for stmt in node.orelse:
+            self.visit(stmt)
+
+
 if __name__ == "__main__":
-    files = astor.code_to_ast.find_py_files("./projects/aiohttp")
+    files = astor.code_to_ast.find_py_files("./projects")
 
     v = IfVertical()
-    w = IfWidth()
     f = Func()
+    fl = For()
     for i in files:
         try:
             a = astor.code_to_ast.parse_file(i[0] + "/" + i[1])
@@ -268,6 +495,26 @@ if __name__ == "__main__":
             continue
         v.visit(a)
         f.visit(a)
+        fl.visit(a)
+
+    all_for = 78141  # 231
+    print("\nFor\n")
+
+    print("All:", fl.all)
+    assert fl.all == all_for
+    print("Else:", fl.with_else)
+
+    print("Inner whiles", fl.num_while)
+    print("Break:", fl.num_break)
+    print("Continue:", fl.num_continue)
+    print("Return:", fl.num_return)
+
+    print("Body size:")
+    for_body_count = 0
+    for (key, value) in sorted(fl.body_size.items()):
+        print("\t", key, ":", value)
+        for_body_count += value
+    assert for_body_count == fl.all
 
     print("\nFunc\n")
 
@@ -308,6 +555,13 @@ if __name__ == "__main__":
         j += va
     print(j)
 
+    print("Body size:")
+    fun_body_count = 0
+    for (key, value) in sorted(f.body_size.items()):
+        print("\t", key, ":", value)
+        fun_body_count += value
+    assert fun_body_count == f.count
+
     print("\nIf\n")
 
     print("Negativity")
@@ -319,20 +573,22 @@ if __name__ == "__main__":
     for (key, value) in sorted(v.complex.items()):
         print("\t", key, ":", value)
 
-    print("Width:")
-    for (key, value) in sorted(w.width.items()):
-        print("\t", key, ":", value)
-
-    g = 0
-    for (k, va) in w.width.items():
-        g += k * va
-    print(w.ifs, w.elses, w.shadow, g)  # 1569 266 ? g
-
     print("Vertical:")
     for (key, value) in sorted(v.vertical.items()):
         print("\t", key, ":", value)
 
     s = 0
+    m = 0
     for (k, va) in v.vertical.items():
         s += k * va
-    print(v.elses, s, s - v.elses)
+        m += va
+    print(v.elses, s)
+    assert s - v.elses == v.all
+
+    print("Order:")
+    print("\tSingle:", v.single)
+    print("\tIncr:", v.incr)
+    print("\tEqual:", v.equal)
+    print("\tDecr:", v.decr)
+    print("\tSemi:", v.semi)
+    assert v.semi + v.single + v.incr + v.equal + v.decr == m
