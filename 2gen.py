@@ -2,7 +2,6 @@ from typing import Any, Tuple
 import astor
 import ast
 import re
-import astunparse
 from enum import Enum
 
 negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
@@ -481,12 +480,82 @@ class For(ast.NodeVisitor):
             self.visit(stmt)
 
 
+class Width(ast.NodeVisitor):
+    def __init__(self, depth=0):
+        self.width = dict()
+        self.current_depth = depth
+        self.max_depth = depth + 1
+
+    def check_body(self, body):
+        if len(body) == 0:
+            return
+
+        w = Width(self.current_depth + 1)
+        for n in body:
+            w.visit(n)
+
+        if self.max_depth < w.max_depth:
+            self.max_depth = w.max_depth
+
+        if self.current_depth == 0:
+            if w.max_depth not in self.width:
+                self.width[w.max_depth] = 0
+            self.width[w.max_depth] += 1
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        self.check_body(node.body)
+        return node
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
+        self.check_body(node.body)
+        return node
+
+    def visit_For(self, node: ast.For) -> Any:
+        self.check_body(node.body)
+        self.check_body(node.orelse)
+        return node
+
+    def visit_AsyncFor(self, node: ast.AsyncFor) -> Any:
+        self.check_body(node.body)
+        self.check_body(node.orelse)
+        return node
+
+    def visit_While(self, node: ast.While) -> Any:
+        self.check_body(node.body)
+        self.check_body(node.orelse)
+        return node
+
+    def visit_If(self, node: ast.If) -> Any:
+        self.check_body(node.body)
+        self.check_body(node.orelse)
+        return node
+
+    def visit_With(self, node: ast.With) -> Any:
+        self.check_body(node.body)
+        return node
+
+    def visit_AsyncWith(self, node: ast.AsyncWith) -> Any:
+        self.check_body(node.body)
+        return node
+
+    def visit_Try(self, node: ast.AsyncWith) -> Any:
+        self.check_body(node.body)
+        self.check_body(node.orelse)
+        self.check_body(node.finalbody)
+        return node
+
+    def visit_ExceptHandler(self, node: ast.ExceptHandler) -> Any:
+        self.check_body(node.body)
+        return node
+
+
 if __name__ == "__main__":
     files = astor.code_to_ast.find_py_files("./projects")
 
     v = IfVertical()
     f = Func()
     fl = For()
+    w = Width()
     for i in files:
         try:
             a = astor.code_to_ast.parse_file(i[0] + "/" + i[1])
@@ -496,8 +565,9 @@ if __name__ == "__main__":
         v.visit(a)
         f.visit(a)
         fl.visit(a)
+        w.visit(a)
 
-    all_for = 78141  # 231
+    all_for = 78280  # 231
     print("\nFor\n")
 
     print("All:", fl.all)
@@ -516,9 +586,11 @@ if __name__ == "__main__":
         for_body_count += value
     assert for_body_count == fl.all
 
+    all_func = 392069
     print("\nFunc\n")
 
     print("All:", f.count)
+    assert all_func == f.count
 
     print("Names length:")
     for (key, value) in sorted(f.len_names.items()):
@@ -562,10 +634,12 @@ if __name__ == "__main__":
         fun_body_count += value
     assert fun_body_count == f.count
 
+    all_if = 302762
     print("\nIf\n")
 
     print("Negativity")
     print("\tAll:", v.all)
+    assert all_if == v.all
     print("\tNegative:", v.negative)
     print("\tPositive:", v.all - v.negative)
 
@@ -592,3 +666,7 @@ if __name__ == "__main__":
     print("\tDecr:", v.decr)
     print("\tSemi:", v.semi)
     assert v.semi + v.single + v.incr + v.equal + v.decr == m
+
+    print("Width:")
+    for (key, value) in sorted(w.width.items()):
+        print("\t", key, ":", value)
