@@ -4,6 +4,13 @@ import ast
 import re
 from enum import Enum
 
+
+# from https://stackoverflow.com/questions/1175208/elegant-python-function-to-convert-camelcase-to-snake-case
+def camel_to_snake(name):
+    name = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+    return re.sub('([a-z0-9])([A-Z])', r'\1_\2', name).lower()
+
+
 negative_op = [ast.NotEq, ast.NotIn, ast.IsNot]
 
 
@@ -231,26 +238,23 @@ class Func(ast.NodeVisitor):
         self.pep8_args["camel_case"] = 0
         self.pep8_args["no"] = 0
 
+        self.arg_types = 0
+
         self.len_args = dict()
 
         self.body_size = dict()
 
     def check_length_of_names(self, name):
-        if re.match(r'^[a-z0-9_]+$', name):
-            elements = name.split('_')
-            size = len(list(filter(None, elements)))
+        if re.match(r'^[A-Z0-9]+$', name):
+            size = 1
+            if name == 'ISTERMINAL' or name == 'ISNONTERMINAL' or name == 'ISEOF' or name == "BBIBOLL":
+                size = 2
             if size in self.len_names:
                 self.len_names[size] += 1
             else:
                 self.len_names[size] = 1
-        elif re.match(r'^[A-Za-z0-9]+$', name):
-            size = len(re.split('(?=[A-Z])', name))
-            if size in self.len_names:
-                self.len_names[size] += 1
-            else:
-                self.len_names[size] = 1
-        elif re.match(r'^[A-Za-z0-9_]+$', name):
-            elements = name.split('_')
+        else:
+            elements = camel_to_snake(name).split('_')
             size = len(list(filter(None, elements)))
             if size in self.len_names:
                 self.len_names[size] += 1
@@ -260,6 +264,8 @@ class Func(ast.NodeVisitor):
     def check_name_pep8(self, name):
         if re.match(r'^[a-z0-9_]+$', name):
             self.pep8_names["pep8"] += 1
+        elif re.match(r'^[A-Z0-9]+$', name):
+            self.pep8_names["no"] += 1
         elif re.match(r'^[A-Za-z0-9]+$', name):
             self.pep8_names["camel_case"] += 1
         elif re.match(r'^[A-Za-z0-9_]+$', name):
@@ -286,23 +292,18 @@ class Func(ast.NodeVisitor):
                 temp = temp[1:]
             elif temp[0].arg == 'cls':
                 temp = temp[1:]
-
+        big_a_list = ["POOLIN", "POLLOUT", "POLLERR"]
         for arg in temp:
-            if re.match(r'^[a-z0-9_]+$', arg.arg):
-                elements = arg.arg.split('_')
-                size = len(list(filter(None, elements)))
+            if re.match(r'^[A-Z0-9]+$', arg.arg):
+                size = 1
+                if arg.arg in big_a_list:
+                    size = 2
                 if size in self.len_args:
                     self.len_args[size] += 1
                 else:
                     self.len_args[size] = 1
-            elif re.match(r'^[A-Za-z0-9]+$', arg.arg):
-                size = len(re.split('(?=[A-Z])', arg.arg))
-                if size in self.len_args:
-                    self.len_args[size] += 1
-                else:
-                    self.len_args[size] = 1
-            elif re.match(r'^[A-Za-z0-9_]+$', arg.arg):
-                elements = arg.arg.split('_')
+            else:
+                elements = camel_to_snake(arg.arg).split('_')
                 size = len(list(filter(None, elements)))
                 if size in self.len_args:
                     self.len_args[size] += 1
@@ -320,6 +321,8 @@ class Func(ast.NodeVisitor):
         for arg in temp:
             if re.match(r'^[a-z0-9_]+$', arg.arg):
                 self.pep8_args["pep8"] += 1
+            elif re.match(r'^[A-Z0-9]+$', arg.arg):
+                self.pep8_args["no"] += 1
             elif re.match(r'^[A-Za-z0-9]+$', arg.arg):
                 self.pep8_args["camel_case"] += 1
             elif re.match(r'^[A-Za-z0-9_]+$', arg.arg):
@@ -349,8 +352,20 @@ class Func(ast.NodeVisitor):
 
             self.body_size[size] += 1
 
+    def check_types(self, args):
+        temp = list(args.args)
+        if len(temp) > 0:
+            if temp[0].arg == 'self':
+                temp = temp[1:]
+            elif temp[0].arg == 'cls':
+                temp = temp[1:]
+        for arg in temp:
+            if arg.annotation:
+                self.arg_types += 1
+
     def check_function_def(self, node: ast.FunctionDef):
         self.count += 1
+        self.check_types(node.args)
         self.count_args(node.args)
         self.check_args_pep8(node.args)
         self.check_args_len(node.args)
@@ -480,11 +495,29 @@ class For(ast.NodeVisitor):
             self.visit(stmt)
 
 
+class F:
+    def __init__(self):
+        self.cif = ast.If
+        self.path = ""
+
+
 class Width(ast.NodeVisitor):
     def __init__(self, depth=0):
         self.width = dict()
         self.current_depth = depth
         self.max_depth = depth + 1
+
+        self.func = 0
+        self.afunc = 0
+        self.fors = 0
+        self.afors = 0
+        self.whiles = 0
+        self.ifs = 0
+        self.withs = 0
+        self.awiths = 0
+        self.trys = 0
+        self.ex_h = 0
+        self.classes = 0
 
     def check_body(self, body):
         if len(body) == 0:
@@ -494,6 +527,18 @@ class Width(ast.NodeVisitor):
         for n in body:
             w.visit(n)
 
+        self.func += w.func
+        self.afunc += w.afunc
+        self.fors += w.fors
+        self.afors += w.afors
+        self.whiles += w.whiles
+        self.ifs += w.ifs
+        self.withs += w.withs
+        self.awiths += w.awiths
+        self.trys += w.trys
+        self.ex_h += w.ex_h
+        self.classes += w.classes
+
         if self.max_depth < w.max_depth:
             self.max_depth = w.max_depth
 
@@ -502,49 +547,65 @@ class Width(ast.NodeVisitor):
                 self.width[w.max_depth] = 0
             self.width[w.max_depth] += 1
 
+    def visit_ClassDef(self, node: ast.ClassDef) -> Any:
+        self.classes += 1
+        self.check_body(node.body)
+        return node
+
     def visit_FunctionDef(self, node: ast.FunctionDef) -> Any:
+        self.func += 1
         self.check_body(node.body)
         return node
 
     def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> Any:
+        self.afunc += 1
         self.check_body(node.body)
         return node
 
     def visit_For(self, node: ast.For) -> Any:
+        self.fors += 1
         self.check_body(node.body)
         self.check_body(node.orelse)
         return node
 
     def visit_AsyncFor(self, node: ast.AsyncFor) -> Any:
+        self.afors += 1
         self.check_body(node.body)
         self.check_body(node.orelse)
         return node
 
     def visit_While(self, node: ast.While) -> Any:
+        self.whiles += 1
         self.check_body(node.body)
         self.check_body(node.orelse)
         return node
 
     def visit_If(self, node: ast.If) -> Any:
+        self.ifs += 1
         self.check_body(node.body)
         self.check_body(node.orelse)
         return node
 
     def visit_With(self, node: ast.With) -> Any:
+        self.withs += 1
         self.check_body(node.body)
         return node
 
     def visit_AsyncWith(self, node: ast.AsyncWith) -> Any:
+        self.awiths += 1
         self.check_body(node.body)
         return node
 
     def visit_Try(self, node: ast.AsyncWith) -> Any:
+        self.trys += 1
         self.check_body(node.body)
         self.check_body(node.orelse)
         self.check_body(node.finalbody)
+        self.check_body(node.handlers)
         return node
 
     def visit_ExceptHandler(self, node: ast.ExceptHandler) -> Any:
+        self.ex_h += 1
         self.check_body(node.body)
         return node
 
@@ -557,6 +618,8 @@ if __name__ == "__main__":
     fl = For()
     w = Width()
     for i in files:
+        if "test" in i[1]:
+            continue
         try:
             a = astor.code_to_ast.parse_file(i[0] + "/" + i[1])
         except Exception as e:
@@ -567,7 +630,7 @@ if __name__ == "__main__":
         fl.visit(a)
         w.visit(a)
 
-    all_for = 78280  # 231
+    all_for = 57083  # 231
     print("\nFor\n")
 
     print("All:", fl.all)
@@ -582,36 +645,51 @@ if __name__ == "__main__":
     print("Body size:")
     for_body_count = 0
     for (key, value) in sorted(fl.body_size.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
         for_body_count += value
     assert for_body_count == fl.all
 
-    all_func = 392069
+    all_func = 221050
     print("\nFunc\n")
 
     print("All:", f.count)
     assert all_func == f.count
 
+    t = 0
     print("Names length:")
     for (key, value) in sorted(f.len_names.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+    assert t == all_func
 
+    t = 0
     print("Names:")
     for (key, value) in sorted(f.pep8_names.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+    assert t == all_func
 
     print("Count Args:")
+    t = 0
+    a = 0
     for (key, value) in sorted(f.args.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+        a += key * value
+    assert t == all_func
+    print("Types Args:", f.arg_types)
 
     t = 0
     for (k, va) in f.args.items():
         t += va * k
     print(t)
 
+    t = 0
     print("Names args length:")
     for (key, value) in sorted(f.len_args.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+    assert t == a
 
     r = 0
     for (k, va) in f.len_args.items():
@@ -619,8 +697,11 @@ if __name__ == "__main__":
     print(r)
 
     print("Args Names:")
+    t = 0
     for (key, value) in sorted(f.pep8_args.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+    assert t == a
 
     j = 0
     for (k, va) in f.pep8_args.items():
@@ -630,11 +711,11 @@ if __name__ == "__main__":
     print("Body size:")
     fun_body_count = 0
     for (key, value) in sorted(f.body_size.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
         fun_body_count += value
     assert fun_body_count == f.count
 
-    all_if = 302762
+    all_if = 278613
     print("\nIf\n")
 
     print("Negativity")
@@ -644,12 +725,15 @@ if __name__ == "__main__":
     print("\tPositive:", v.all - v.negative)
 
     print("Complexity:")
+    t = 0
     for (key, value) in sorted(v.complex.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+        t += value
+    assert t == v.all
 
     print("Vertical:")
     for (key, value) in sorted(v.vertical.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
 
     s = 0
     m = 0
@@ -669,4 +753,17 @@ if __name__ == "__main__":
 
     print("Width:")
     for (key, value) in sorted(w.width.items()):
-        print("\t", key, ":", value)
+        print("\t", key, "\t", value)
+
+    # from first analyzer - classes nodes
+    assert w.ifs == all_if
+    assert w.func == all_func
+    assert w.fors == all_for
+    assert w.ex_h == 31487
+    assert w.trys == 30040
+    assert w.withs == 10338
+    assert w.afunc == 9839
+    assert w.whiles == 4888
+    assert w.awiths == 210
+    assert w.afors == 38
+    assert w.classes == 45838

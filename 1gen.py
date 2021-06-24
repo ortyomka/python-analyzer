@@ -17,6 +17,8 @@ if __name__ == "__main__":
     error_files = 0
     all_files = 0
     for i in files:
+        if "test" in i[1]:
+            continue
         all_files += 1
         try:
             a = astor.code_to_ast.parse_file(i[0] + "/" + i[1])
